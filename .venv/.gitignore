@@ -1,0 +1,20 @@
+# Ignore the virtual environment folder
+venv/
+
+# MacOS system files
+.DS_Store
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables or secrets
+.env
+
+# Logs
+*.log
