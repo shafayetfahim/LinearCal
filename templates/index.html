@@ -1,8 +1,315 @@
+<!--
 {% extends 'base.html' %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Matrix Operations{% endblock %}
 
 {% block content %}
-<h2>Home Page</h2>
-<p>Welcome to the Flask application!</p>
+<div style="display: flex; justify-content: space-between; align-items: flex-start;">
+    &lt;!&ndash; Left side: Input forms for two matrices &ndash;&gt;
+    <div style="width: 70%;">
+        <h2>Matrix Input</h2>
+
+        &lt;!&ndash; Form for Matrix A &ndash;&gt;
+        <h3>Matrix A</h3>
+        <form id="matrix-a-form">
+            <label for="rows-a">Number of Rows:</label>
+            <input type="number" id="rows-a" name="rows" min="1" required>
+            <label for="cols-a">Number of Columns:</label>
+            <input type="number" id="cols-a" name="cols" min="1" required>
+            <button type="button" onclick="generateMatrix('A')">Generate Matrix A</button>
+        </form>
+        <div id="matrix-a-container" style="margin-top: 10px;"></div>
+        <button id="submit-matrix-a" style="display: none; margin-top: 10px;" onclick="submitMatrix('A')">Submit Matrix A</button>
+
+        &lt;!&ndash; Form for Matrix B &ndash;&gt;
+        <h3>Matrix B</h3>
+        <form id="matrix-b-form">
+            <label for="rows-b">Number of Rows:</label>
+            <input type="number" id="rows-b" name="rows" min="1" required>
+            <label for="cols-b">Number of Columns:</label>
+            <input type="number" id="cols-b" name="cols" min="1" required>
+            <button type="button" onclick="generateMatrix('B')">Generate Matrix B</button>
+        </form>
+        <div id="matrix-b-container" style="margin-top: 10px;"></div>
+        <button id="submit-matrix-b" style="display: none; margin-top: 10px;" onclick="submitMatrix('B')">Submit Matrix B</button>
+
+        &lt;!&ndash; Display the matrix data &ndash;&gt;
+        <div id="result-container" style="margin-top: 20px;"></div>
+    </div>
+
+    &lt;!&ndash; Right side: Buttons for matrix operations &ndash;&gt;
+    <div style="width: 25%; text-align: center; border-left: 1px solid #ccc; padding-left: 20px;">
+        <h3>Matrix Operations</h3>
+        <button style="margin: 10px; padding: 10px 20px;" onclick="addMatrices()">Add Matrices</button>
+        <button style="margin: 10px; padding: 10px 20px;" onclick="subtractMatrices()">Subtract Matrices</button>
+        <button style="margin: 10px; padding: 10px 20px;" onclick="scalarMultiplyMatrix()">Scalar Multiply Matrix</button>
+    </div>
+</div>
+
+<script>
+    let matrixA = [];
+    let matrixB = [];
+
+    // Function to generate input fields for Matrix A or Matrix B
+    function generateMatrix(matrixId) {
+        const rows = parseInt(document.getElementById(`rows-${matrixId.toLowerCase()}`).value);
+        const cols = parseInt(document.getElementById(`cols-${matrixId.toLowerCase()}`).value);
+        const matrixContainer = document.getElementById(`matrix-${matrixId.toLowerCase()}-container`);
+
+        if (!rows || !cols) {
+            alert(`Please enter valid dimensions for Matrix ${matrixId}.`);
+            return;
+        }
+
+        // Clear any previous inputs
+        matrixContainer.innerHTML = "";
+
+        // Create input fields for the matrix
+        for (let i = 0; i < rows; i++) {
+            const rowDiv = document.createElement("div");
+            for (let j = 0; j < cols; j++) {
+                const input = document.createElement("input");
+                input.type = "number";
+                input.name = `matrix[${i}][${j}]`;
+                input.style.width = "50px";
+                input.style.margin = "5px";
+                input.required = true;
+                rowDiv.appendChild(input);
+            }
+            matrixContainer.appendChild(rowDiv);
+        }
+
+        // Show the submit button
+        document.getElementById(`submit-matrix-${matrixId.toLowerCase()}`).style.display = "inline-block";
+    }
+
+    // Function to submit the matrix and save it as Matrix A or Matrix B
+    function submitMatrix(matrixId) {
+        const matrixContainer = document.getElementById(`matrix-${matrixId.toLowerCase()}-container`);
+        const inputs = matrixContainer.querySelectorAll("input");
+        const rows = parseInt(document.getElementById(`rows-${matrixId.toLowerCase()}`).value);
+        const cols = parseInt(document.getElementById(`cols-${matrixId.toLowerCase()}`).value);
+
+        const matrix = [];
+        let row = [];
+        inputs.forEach((input, index) => {
+            row.push(parseFloat(input.value));
+            if ((index + 1) % cols === 0) {
+                matrix.push(row);
+                row = [];
+            }
+        });
+
+        if (matrixId === 'A') {
+            matrixA = matrix;
+            alert("Matrix A saved successfully!");
+            console.log("Matrix A:", matrixA);
+        } else {
+            matrixB = matrix;
+            alert("Matrix B saved successfully!");
+            console.log("Matrix B:", matrixB);
+        }
+    }
+
+    // Function to add matrices
+    function addMatrices() {
+        if (!matrixA.length || !matrixB.length) {
+            alert("Please define both matrices first.");
+            return;
+        }
+
+        const result = matrixA.map((row, i) =>
+            row.map((val, j) => val + (matrixB[i][j] || 0))
+        );
+        displayMatrix(result, "Addition Result");
+    }
+
+    // Function to subtract matrices
+    function subtractMatrices() {
+        if (!matrixA.length || !matrixB.length) {
+            alert("Please define both matrices first.");
+            return;
+        }
+
+        const result = matrixA.map((row, i) =>
+            row.map((val, j) => val - (matrixB[i][j] || 0))
+        );
+        displayMatrix(result, "Subtraction Result");
+    }
+
+    // Function to scalar multiply a matrix
+    function scalarMultiplyMatrix() {
+        const scalar = parseFloat(prompt("Enter a scalar value:"));
+        if (isNaN(scalar)) {
+            alert("Invalid scalar value.");
+            return;
+        }
+
+        const result = matrixA.map((row) => row.map((val) => val * scalar));
+        displayMatrix(result, "Scalar Multiplication Result");
+    }
+
+    // Function to display the matrix in a clean table
+    function displayMatrix(matrix, title) {
+        const resultContainer = document.getElementById("result-container");
+        resultContainer.innerHTML = `<h3>${title}:</h3>`;
+
+        const table = document.createElement("table");
+        table.style.borderCollapse = "collapse";
+        table.style.margin = "10px auto";
+
+        matrix.forEach((row) => {
+            const tr = document.createElement("tr");
+            row.forEach((cell) => {
+                const td = document.createElement("td");
+                td.textContent = cell;
+                td.style.border = "1px solid #333";
+                td.style.padding = "8px 12px";
+                td.style.textAlign = "center";
+                tr.appendChild(td);
+            });
+            table.appendChild(tr);
+        });
+
+        resultContainer.appendChild(table);
+    }
+</script>
+{% endblock %}-->
+
+{% extends 'base.html' %}
+
+{% block title %}Matrix Operations{% endblock %}
+
+{% block content %}
+<div id="app" style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <!-- Left side: Input forms for two matrices -->
+    <div style="width: 70%;">
+        <h2>Matrix Input</h2>
+
+        <!-- Form for Matrix A -->
+        <h3>Matrix A</h3>
+        <form @submit.prevent="generateMatrix('A')">
+            <label for="rows-a">Number of Rows:</label>
+            <input type="number" id="rows-a" v-model="rowsA" min="1" required>
+            <label for="cols-a">Number of Columns:</label>
+            <input type="number" id="cols-a" v-model="colsA" min="1" required>
+            <button type="submit">Generate Matrix A</button>
+        </form>
+        <div v-if="matrixA.length > 0" style="margin-top: 10px;">
+            <h4>Matrix A:</h4>
+            <div v-for="(row, rowIndex) in matrixA" :key="'a-' + rowIndex">
+                <input v-for="(value, colIndex) in row" :key="'a-' + rowIndex + '-' + colIndex"
+                       type="number" v-model.number="matrixA[rowIndex][colIndex]"
+                       style="width: 50px; margin: 5px;">
+            </div>
+        </div>
+
+        <!-- Form for Matrix B -->
+        <h3>Matrix B</h3>
+        <form @submit.prevent="generateMatrix('B')">
+            <label for="rows-b">Number of Rows:</label>
+            <input type="number" id="rows-b" v-model="rowsB" min="1" required>
+            <label for="cols-b">Number of Columns:</label>
+            <input type="number" id="cols-b" v-model="colsB" min="1" required>
+            <button type="submit">Generate Matrix B</button>
+        </form>
+        <div v-if="matrixB.length > 0" style="margin-top: 10px;">
+            <h4>Matrix B:</h4>
+            <div v-for="(row, rowIndex) in matrixB" :key="'b-' + rowIndex">
+                <input v-for="(value, colIndex) in row" :key="'b-' + rowIndex + '-' + colIndex"
+                       type="number" v-model.number="matrixB[rowIndex][colIndex]"
+                       style="width: 50px; margin: 5px;">
+            </div>
+        </div>
+
+        <!-- Result container -->
+        <div v-if="resultMatrix.length > 0" style="margin-top: 20px;">
+            <h3>{{ resultTitle }}</h3>
+            <table style="border-collapse: collapse; margin: 10px auto;">
+                <tr v-for="(row, rowIndex) in resultMatrix" :key="'result-' + rowIndex">
+                    <td v-for="(cell, colIndex) in row" :key="'result-' + rowIndex + '-' + colIndex"
+                        style="border: 1px solid #333; padding: 8px 12px; text-align: center;">
+                        {{ cell }}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Right side: Buttons for matrix operations -->
+    <div style="width: 25%; text-align: center; border-left: 1px solid #ccc; padding-left: 20px;">
+        <h3>Matrix Operations</h3>
+        <button style="margin: 10px; padding: 10px 20px;" @click="addMatrices">Add Matrices</button>
+        <button style="margin: 10px; padding: 10px 20px;" @click="subtractMatrices">Subtract Matrices</button>
+        <button style="margin: 10px; padding: 10px 20px;" @click="scalarMultiplyMatrix">Scalar Multiply Matrix</button>
+    </div>
+</div>
+
+<!-- Include Vue.js via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                rowsA: 0,
+                colsA: 0,
+                rowsB: 0,
+                colsB: 0,
+                matrixA: [],
+                matrixB: [],
+                resultMatrix: [],
+                resultTitle: "",
+            };
+        },
+        methods: {
+            generateMatrix(matrixId) {
+                const rows = matrixId === 'A' ? this.rowsA : this.rowsB;
+                const cols = matrixId === 'A' ? this.colsA : this.colsB;
+
+                const matrix = Array.from({ length: rows }, () =>
+                    Array.from({ length: cols }, () => 0)
+                );
+
+                if (matrixId === 'A') this.matrixA = matrix;
+                if (matrixId === 'B') this.matrixB = matrix;
+            },
+            addMatrices() {
+                if (this.matrixA.length && this.matrixB.length) {
+                    this.resultMatrix = this.matrixA.map((row, i) =>
+                        row.map((value, j) => value + (this.matrixB[i][j] || 0))
+                    );
+                    this.resultTitle = "Addition Result";
+                } else {
+                    alert("Please define both matrices first.");
+                }
+            },
+            subtractMatrices() {
+                if (this.matrixA.length && this.matrixB.length) {
+                    this.resultMatrix = this.matrixA.map((row, i) =>
+                        row.map((value, j) => value - (this.matrixB[i][j] || 0))
+                    );
+                    this.resultTitle = "Subtraction Result";
+                } else {
+                    alert("Please define both matrices first.");
+                }
+            },
+            scalarMultiplyMatrix() {
+                const scalar = parseFloat(prompt("Enter a scalar value:"));
+                if (!isNaN(scalar)) {
+                    this.resultMatrix = this.matrixA.map((row) =>
+                        row.map((value) => value * scalar)
+                    );
+                    this.resultTitle = "Scalar Multiplication Result";
+                } else {
+                    alert("Invalid scalar value.");
+                }
+            },
+        },
+    });
+
+    app.mount("#app");
+</script>
 {% endblock %}
+
+
