@@ -1,5 +1,3 @@
-import numpy
-
 ''' MATRIX FUNCTIONS BELOW '''
 def add_matrices(matrix_a, matrix_b):
     """

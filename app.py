@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
-from services.calculator_service import add, subtract, multiply, divide, exponent
-
+import calculator_service
 app = Flask(__name__)
 
 @app.route('/calculate', methods=['POST'])
